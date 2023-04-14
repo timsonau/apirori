@@ -16,8 +16,10 @@ def main():
     df = df.rename(columns={df.columns[0]: 'TID', df.columns[1]: 'item_IDs'})
     # make item_ids seperated store as a list
     df['item_IDs'] = df['item_IDs'].str.split(', ')
+    print(df)
     total_item_set = set(df['item_IDs'].explode())
     print(total_item_set)
+    
     for n in range(1, 4):
         print(f"******C{n} Candidates Table******")
         candidates = get_candidates_table(df, n)

@@ -11,30 +11,32 @@ def main():
     # make item_ids seperated store as a list
     data_dict = dfToDict(df)
 
+    min_sup_count = int(input("Enter Minimium Support Count: "))
+    
     currentCandidatesTable  = get_c1(data_dict)
-    currentFrequencyTable = get_l1(currentCandidatesTable)
+    print("*************************C1*************************")
+    display_as_table(currentCandidatesTable)
 
+    currentFrequencyTable = get_frequency_dict(currentCandidatesTable, min_sup_count)
+    print("*************************L1*************************")
+    display_as_table(currentFrequencyTable)
     k = 2
-    while(len(currentCandidatesTable) > 0):
-
+    while(len(currentFrequencyTable) > 0):
         currentCandidatesTable = apriori_gen(currentFrequencyTable, k)
-        if(len(currentCandidatesTable) > 0):
-            for transaction in data_dict.values():
-                subsets = subset(set(transaction), k)
-                for s in subsets:
-                    if s in currentCandidatesTable:
-                        currentCandidatesTable[s] += 1
-            print(f"*******C{k}*********")
-            print(currentCandidatesTable)
-            currentFrequencyTable = get_freqeuncey_dict(currentCandidatesTable)
-            print(f"*******L{k}*********")
-            print(currentFrequencyTable)
-            k+= 1
-
-
-    
-    
-    print(data_dict)
+        for transaction in data_dict.values():
+            subsets = subset(set(transaction), k)
+            for s in subsets:
+                if s in currentCandidatesTable:
+                    currentCandidatesTable[s] += 1
+        print(f"*************************C{k}*************************")
+        display_as_table(currentCandidatesTable)
+        currentFrequencyTable = get_frequency_dict(currentCandidatesTable, min_sup_count)
+        if(len(currentFrequencyTable) > 0):
+            print(f"*************************L{k}*************************")
+            display_as_table(currentFrequencyTable)
+        else:
+            print(f"Frequency table L{k} empty, end execution")
+        k+= 1
 
 
 def dfToDict(df):
@@ -53,17 +55,8 @@ def get_c1(data):
 
     return c1_dict
     
-def get_l1(data):
-    min_sup = 2
-    l1_dict = {}
-    for key in data:
-        if data[key] >= min_sup:
-            l1_dict[key] = data[key]
 
-    return l1_dict
-
-def get_freqeuncey_dict(c):
-    min_sup = 2
+def get_frequency_dict(c, min_sup):
     l_dict = {}
     for key in c:
         if c[key] >= min_sup:
@@ -92,18 +85,15 @@ def has_infrequent_subset(canidate, L, k):
             return True
     return False
 
-
 def subset(set, k):
     p = []
     for subset in itertools.combinations(set, k):
         p.append(frozenset(subset))
     return p
 
-
-
-
-
-
+def display_as_table(dict):
+    df = pd.DataFrame(list(dict.items()), columns=['Item Set', 'Support Count'])
+    print(df)
 
 if __name__ == '__main__':
     main()

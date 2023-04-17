@@ -1,13 +1,7 @@
-# -----------------------------------------#
-# Apirori Algoithm Main Function Stubbed
-#
-#
-#
-# -----------------------------------------#
-
 import pandas as pd
 from itertools import combinations
-
+import ast
+import itertools
 def main():
     # read csv file
 
@@ -15,54 +9,119 @@ def main():
     
     df = df.rename(columns={df.columns[0]: 'TID', df.columns[1]: 'item_IDs'})
     # make item_ids seperated store as a list
-    df['item_IDs'] = df['item_IDs'].str.split(', ')
-    print(df)
-    total_item_set = set(df['item_IDs'].explode())
-    print(total_item_set)
+    data_dict = dfToDict(df)
+
+    min_sup_count = int(input("Enter Minimium Support Count: "))
     
-    for n in range(1, 4):
-        print(f"******C{n} Candidates Table******")
-        candidates = get_candidates_table(df, n)
-        print(candidates)
-        frequent_itemsets = get_freq_n_itemset(candidates, n)
-        print(f"******L{n} after pruning******")
-        print(frequent_itemsets)
-        print(f"******Association rules derived from L{n}******")
-        #print_associtation_rules(frequent_itemsets)
+    currentCandidatesTable  = get_c1(data_dict)
+    print("*************************C1*************************")
+    display_as_table(currentCandidatesTable)
 
+    currentFrequencyTable = get_frequency_dict(currentCandidatesTable, min_sup_count)
+    print("*************************L1*************************")
+    display_as_table(currentFrequencyTable)
+    k = 2
+    while(len(currentFrequencyTable) > 0):
+        currentCandidatesTable = apriori_gen(currentFrequencyTable, k)
+        if (len(currentCandidatesTable) == 0): break
+        
+        for transaction in data_dict.values():
+            subsets = subset(set(transaction), k)
+            for s in subsets:
+                if s in currentCandidatesTable:
+                    currentCandidatesTable[s] += 1
+        print(f"*************************C{k}*************************")
+        display_as_table(currentCandidatesTable)
+        currentFrequencyTable = get_frequency_dict(currentCandidatesTable, min_sup_count)
+        if(len(currentFrequencyTable) > 0):
+            print(f"*************************L{k}*************************")
+            display_as_table(currentFrequencyTable)
+        else:
+            print(f"Frequency table L{k} empty, end execution")
+        k+= 1
+    
+    #where to derive association rules from currentFrquecyTable
+    display_as_table(currentFrequencyTable)
+def dfToDict(df):
+    """
+    dfToDict: converts a pandas data frame object into a dictionary
 
+    :param df: pandas data frame
+    :return: dictionary containing data frame values
+    """ 
+    return df.set_index('TID')['item_IDs'].str.split(', ').to_dict()
 
-def clean_data_frame(df):
-    col_0 = df.columns[0]
-    col_1 = df.columns[1]
-    ids = df[col_1].str.split(', ')
-    return pd.DataFrame({col_0: df[col_0].repeat(ids.str.len()), col_1 : ids.sum()})
+def get_c1(data):
+    """
+    get_c1: gets the intial candidates table
 
+    :param data: dictionary with the transaction data
+    :return: dictionary containing frozen item set as keys and support count as values
+    """ 
+    c1_dict = {}
 
-#returns all posible combination of length n
-def get_combinations(df, n):
-    combinations_list = list(combinations(set(df['item_IDs'].explode()), n))
-    return combinations_list
+    for transaction in data.values():
+        for item in transaction:
+            item_set = frozenset([item])
+            if  item_set in c1_dict:
+                c1_dict[item_set] += 1
+            else:
+                c1_dict[item_set] = 1
 
-def get_candidates_table(df, n):
-    combo_list = list(combinations(set(df['item_IDs'].explode()), n))
-    combo_occurence = {}
+    return c1_dict
+    
+def get_frequency_dict(C, min_sup):
+    """
+    get_frequency_dict: gets the intial candidates table
 
-    #for combo in combo_list:
-    for combo in combo_list:
-        combo_occurence.setdefault(combo, 0)
+    :param C, the ck candidates table
+    :min_sup, minimum support count threshold
+    :return: dictionary containing frequnet item sets
+    """ 
+    l_dict = {}
+    for key in C:
+        if C[key] >= min_sup:
+            l_dict[key] = C[key]
+    return l_dict
 
-    for combo in combo_list:
-        for row in df.itertuples():
-            if set(combo).issubset(set(row[2])):
-                combo_occurence[combo] += 1
-    return pd.DataFrame.from_dict(combo_occurence, orient='index', columns=['sup_count'])
+def apriori_gen(L, k):
+    """
+    get_frequency_dict: gets the intial candidates table
 
-def get_freq_n_itemset(df, n):
-    min_sup = 2
-    l1 = df[df['sup_count'] >= min_sup]
-    return l1
+    :param L, the Lk-1 frequent item set
+    :min_sup, minimum support count threshold
+    :return: dictionary containing frequnet item sets
+    """ 
+    candidates_dict = {}
+    for l1 in L.keys():
+        for l2 in L.keys():
+            item_set_1 = set(l1)
+            item_set_2 = set(l2)
+            in_common = item_set_1.intersection(item_set_2)
+            if(len(in_common )== k-2):
+                candidate_item_set = item_set_1.union(item_set_2)
+                if(not(frozenset(candidate_item_set) in candidates_dict)):
+                    if(not(has_infrequent_subset(candidate_item_set, L, k))):
+                        candidates_dict[frozenset(candidate_item_set)] = 0
+                    
+    return candidates_dict      
 
+def has_infrequent_subset(canidate, L, k):
+    pset = subset(canidate, k-1)
+    for set in pset:
+        if(not(set in L)):
+            return True
+    return False
+
+def subset(set, k):
+    p = []
+    for subset in itertools.combinations(set, k):
+        p.append(frozenset(subset))
+    return p
+
+def display_as_table(dict):
+    df = pd.DataFrame(list(dict.items()), columns=['Item Set', 'Support Count'])
+    print(df)
 
 if __name__ == '__main__':
     main()

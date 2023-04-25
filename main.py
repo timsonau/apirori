@@ -5,7 +5,13 @@ import itertools
 def main():
     # read csv file
 
-    df = pd.read_csv('AllElectronic.csv')
+    while(True):
+        try:
+            file_name = input("Enter File Name: ")
+            df = pd.read_csv(file_name)
+            break
+        except FileNotFoundError:
+            print("Invalid File Name Try Again")
     
     df = df.rename(columns={df.columns[0]: 'TID', df.columns[1]: 'item_IDs'})
     # make item_ids seperated store as a list

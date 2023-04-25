@@ -1,7 +1,7 @@
 TID,item_IDs
-T100,"Bread, Butter, Lettuce, Jam"
-T200,"Bread, Lettuce, Eggs"
-T300,"Bread, Butter, Corn"
-T400,"Lettuce, Egg, Milk"
-T500,"Bread, Butter, Milk"
-T600,"Milk, Corn"
+T100,"Bread,Butter,Lettuce,Jam"
+T200,"Bread,Lettuce,Eggs"
+T300,"Bread,Butter,Corn"
+T400,"Lettuce,Egg,Milk"
+T500,"Bread,Butter,Milk"
+T600,"Milk,Corn"

@@ -21,6 +21,8 @@ def main():
     print("*************************L1*************************")
     display_as_table(currentFrequencyTable)
     k = 2
+
+    lastNonEmptyFrequencyTable = currentFrequencyTable
     while(len(currentFrequencyTable) > 0):
         currentCandidatesTable = apriori_gen(currentFrequencyTable, k)
         if (len(currentCandidatesTable) == 0): break
@@ -30,18 +32,26 @@ def main():
             for s in subsets:
                 if s in currentCandidatesTable:
                     currentCandidatesTable[s] += 1
+
         print(f"*************************C{k}*************************")
         display_as_table(currentCandidatesTable)
         currentFrequencyTable = get_frequency_dict(currentCandidatesTable, min_sup_count)
         if(len(currentFrequencyTable) > 0):
             print(f"*************************L{k}*************************")
             display_as_table(currentFrequencyTable)
+            lastNonEmptyFrequencyTable = currentFrequencyTable
         else:
             print(f"Frequency table L{k} empty, end execution")
         k+= 1
     
     #where to derive association rules from currentFrquecyTable
-    display_as_table(currentFrequencyTable)
+    print(f"*************************Final Frequency Table*************************")
+    display_as_table(lastNonEmptyFrequencyTable)
+    min_conf = int(input("Enter Minimium Confidence threshold as %: "))
+    for itemset in lastNonEmptyFrequencyTable:
+        generate_association_rules(set(itemset), data_dict, min_conf)
+    
+
 def dfToDict(df):
     """
     dfToDict: converts a pandas data frame object into a dictionary
@@ -113,11 +123,37 @@ def has_infrequent_subset(canidate, L, k):
             return True
     return False
 
-def subset(set, k):
+def subset(s, k):
     p = []
-    for subset in itertools.combinations(set, k):
+    for subset in itertools.combinations(s, k):
         p.append(frozenset(subset))
     return p
+
+def nonempty_subsets(s):
+    subsets = []
+    for i in range(len(s)):
+        for subset in combinations(s, i):
+            if len(subset) > 0:
+                subsets.append(frozenset(subset))
+    return subsets
+
+def generate_association_rules(itemset, data, minconf):
+    subsets = nonempty_subsets(itemset)
+    print(f"*************************association rules for {itemset}*************************")
+    for s in subsets:
+        lhs = set(s)
+        rhs = itemset.difference(s, data)
+
+        confidence = (support_count(itemset, data) / support_count(lhs, data)) * 100
+        if(confidence > minconf):
+            print(f'{lhs} -> {rhs}: {confidence}%')
+
+def support_count(s, data):
+    sup_count = 0
+    for transaction in data.values():
+        if(s.issubset(set(transaction))):
+            sup_count += 1
+    return sup_count
 
 def display_as_table(dict):
     df = pd.DataFrame(list(dict.items()), columns=['Item Set', 'Support Count'])

@@ -8,11 +8,11 @@ def main():
 
     while (True):
         try:
-            file_name = input("Enter File Name: ")
+            file_name = input("Enter Path to file: ")
             df = pd.read_csv(file_name)
             break
         except FileNotFoundError:
-            print("Invalid File Name Try Again")
+            print("File could not be found")
 
     df = df.rename(columns={df.columns[0]: 'TID', df.columns[1]: 'item_IDs'})
     # make item_ids seperated store as a list

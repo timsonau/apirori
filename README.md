@@ -8,5 +8,8 @@ Pandas can be installed using [pip](https://pip.pypa.io/en/stable/) by use of th
 pip install pandas
 ```
 
+## Data Sets
+csv files containg the data can be found in ./data
+
 ## Python Version
 Python 3.8 

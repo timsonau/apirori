@@ -1,6 +1,5 @@
 import pandas as pd
 from itertools import combinations
-import ast
 import itertools
 def main():
     # read csv file
